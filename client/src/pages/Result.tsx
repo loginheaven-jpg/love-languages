@@ -114,8 +114,18 @@ export default function Result() {
   const handlePdfDownload = async () => {
     setIsPdfLoading(true);
     try {
-      await generateResultPdf(result);
-      toast.success("PDF가 다운로드되었습니다!");
+      const { isMobile } = await generateResultPdf(result);
+      if (isMobile) {
+        toast.success("PDF가 새 탭에서 열렸습니다.", {
+          description: "우측 상단 다운로드 아이콘을 눌러 저장하세요. 파일명: 예봄-사랑의언어_진단결과",
+          duration: 8000,
+        });
+      } else {
+        toast.success("PDF가 다운로드되었습니다!", {
+          description: "파일명: 예봄-사랑의언어_진단결과 (다운로드 폴더에서 확인)",
+          duration: 5000,
+        });
+      }
     } catch (e) {
       toast.error("PDF 생성에 실패했습니다. 다시 시도해주세요.");
     } finally {

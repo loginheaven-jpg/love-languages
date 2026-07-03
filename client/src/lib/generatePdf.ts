@@ -3,11 +3,65 @@ import html2canvas from 'html2canvas-pro';
 import { QuizResult, LANGUAGE_INFO, LoveLanguage } from './quizData';
 
 /**
+ * Detect mobile device
+ */
+function isMobileDevice(): boolean {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+/**
+ * Cross-browser/mobile PDF download
+ * On mobile: opens PDF in new tab for user to save manually
+ * On desktop: triggers direct download
+ */
+function downloadPdf(doc: jsPDF, filename: string): void {
+  const pdfBlob = doc.output('blob');
+  const blobUrl = URL.createObjectURL(pdfBlob);
+
+  if (isMobileDevice()) {
+    // Mobile: open in new tab so user can view and save
+    // This works reliably on Samsung Internet, Chrome for Android, Safari iOS
+    const newWindow = window.open(blobUrl, '_blank');
+    if (!newWindow) {
+      // Fallback: use a link with download attribute
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = filename;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+      }, 1000);
+    } else {
+      // Revoke after a delay to let the new tab load
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    }
+  } else {
+    // Desktop: direct download via link click
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    }, 500);
+  }
+}
+
+/**
  * Generate a PDF report from quiz results
  * Uses html2canvas to render a hidden DOM element, then captures it as image for PDF
  * This approach ensures Korean text renders correctly
+ * 
+ * Returns: { isMobile: boolean } to help caller show appropriate toast
  */
-export async function generateResultPdf(result: QuizResult): Promise<void> {
+export async function generateResultPdf(result: QuizResult): Promise<{ isMobile: boolean }> {
   const primaryLang = LANGUAGE_INFO[result.primary];
   const secondaryLang = LANGUAGE_INFO[result.secondary];
   const sortedScores = (Object.entries(result.scores) as [LoveLanguage, number][])
@@ -15,6 +69,8 @@ export async function generateResultPdf(result: QuizResult): Promise<void> {
 
   const today = new Date();
   const dateStr = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+  const fileDate = `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}${String(today.getDate()).padStart(2, '0')}`;
+  const filename = `예봄-사랑의언어_진단결과_${fileDate}.pdf`;
 
   // Create hidden container for rendering
   const container = document.createElement('div');
@@ -228,7 +284,10 @@ export async function generateResultPdf(result: QuizResult): Promise<void> {
       heightLeft -= pageHeight;
     }
 
-    doc.save(`사랑의언어_진단결과_${dateStr}.pdf`);
+    // Use cross-browser/mobile compatible download
+    downloadPdf(doc, filename);
+
+    return { isMobile: isMobileDevice() };
   } finally {
     document.body.removeChild(container);
   }
