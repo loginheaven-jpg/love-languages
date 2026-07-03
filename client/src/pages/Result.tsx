@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { QuizResult, LANGUAGE_INFO, LoveLanguage } from "@/lib/quizData";
+import { QuizResult, LANGUAGE_INFO, LoveLanguage, calculateResult } from "@/lib/quizData";
 import { generateResultPdf } from "@/lib/generatePdf";
 import { motion } from "framer-motion";
-import { Heart, ArrowLeft, RotateCcw, Share2, Download, Loader2 } from "lucide-react";
-import { useLocation } from "wouter";
+import { Heart, ArrowLeft, RotateCcw, Share2, Download, Loader2, Link2 } from "lucide-react";
+import { useLocation, useSearch } from "wouter";
 import RadarChart from "@/components/RadarChart";
 import { toast } from "sonner";
 
@@ -12,22 +12,66 @@ import { toast } from "sonner";
  * Design: Warm Embrace - Personalized Result Page
  * Asymmetric layout, radar chart visualization
  * Detailed breakdown with tips
- * PDF download & share functionality
+ * PDF download & share link functionality
+ * Supports URL-based result sharing via encoded scores
  */
+
+// Encode scores into a compact URL parameter: A-B-C-D-E format
+function encodeScores(scores: Record<LoveLanguage, number>): string {
+  return `${scores.A}-${scores.B}-${scores.C}-${scores.D}-${scores.E}`;
+}
+
+// Decode scores from URL parameter
+function decodeScores(encoded: string): QuizResult | null {
+  try {
+    const parts = encoded.split('-').map(Number);
+    if (parts.length !== 5 || parts.some(isNaN) || parts.some(n => n < 0 || n > 30)) {
+      return null;
+    }
+    const scores: Record<LoveLanguage, number> = {
+      A: parts[0], B: parts[1], C: parts[2], D: parts[3], E: parts[4],
+    };
+    const sorted = (Object.entries(scores) as [LoveLanguage, number][])
+      .sort((a, b) => b[1] - a[1]);
+    return {
+      scores,
+      primary: sorted[0][0],
+      secondary: sorted[1][0],
+      answers: [], // Not available from shared link
+    };
+  } catch {
+    return null;
+  }
+}
 
 export default function Result() {
   const [, navigate] = useLocation();
+  const searchString = useSearch();
   const [result, setResult] = useState<QuizResult | null>(null);
   const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [isShared, setIsShared] = useState(false);
 
   useEffect(() => {
+    // First try URL params (shared link)
+    const params = new URLSearchParams(searchString);
+    const scoresParam = params.get('s');
+    if (scoresParam) {
+      const decoded = decodeScores(scoresParam);
+      if (decoded) {
+        setResult(decoded);
+        setIsShared(true);
+        return;
+      }
+    }
+
+    // Then try sessionStorage (just completed quiz)
     const stored = sessionStorage.getItem('quizResult');
     if (stored) {
       setResult(JSON.parse(stored));
     } else {
       navigate('/');
     }
-  }, [navigate]);
+  }, [navigate, searchString]);
 
   if (!result) return null;
 
@@ -43,16 +87,27 @@ export default function Result() {
   };
 
   const handleShare = async () => {
-    const text = `[예봄 부부의 삶] 나의 사랑의 언어는 "${primaryLang.name}" 입니다! ${primaryLang.icon}\n\n5가지 사랑의 언어 진단을 해보세요.`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: '5가지 사랑의 언어 진단 결과', text });
-      } catch (e) {
-        // User cancelled
-      }
-    } else {
-      await navigator.clipboard.writeText(text);
-      toast.success("결과가 클립보드에 복사되었습니다!");
+    const encoded = encodeScores(result.scores);
+    const shareUrl = `${window.location.origin}/result?s=${encoded}`;
+    const shareText = `[예봄 부부의 삶] 나의 사랑의 언어 진단 결과\n\n` +
+      `주 언어: ${primaryLang.icon} ${primaryLang.name} (${result.scores[result.primary]}점)\n` +
+      `보조 언어: ${secondaryLang.icon} ${secondaryLang.name} (${result.scores[result.secondary]}점)\n\n` +
+      `결과 보기: ${shareUrl}`;
+
+    try {
+      await navigator.clipboard.writeText(shareText);
+      toast.success("결과 링크가 클립보드에 복사되었습니다!", {
+        description: "카카오톡이나 메시지에 붙여넣기 하세요.",
+      });
+    } catch {
+      // Fallback: create a temporary textarea
+      const textarea = document.createElement('textarea');
+      textarea.value = shareText;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      toast.success("결과 링크가 클립보드에 복사되었습니다!");
     }
   };
 
@@ -98,6 +153,20 @@ export default function Result() {
         >
           <span className="text-sm text-[#3D3535]/40 font-medium tracking-wide">예봄 부부의 삶</span>
         </motion.div>
+
+        {/* Shared badge */}
+        {isShared && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-6"
+          >
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-medium">
+              <Link2 className="w-3 h-3" />
+              공유된 결과를 보고 있습니다
+            </span>
+          </motion.div>
+        )}
 
         {/* Primary Result */}
         <motion.section
@@ -319,8 +388,7 @@ export default function Result() {
           </Button>
           <Button
             onClick={handleShare}
-            variant="outline"
-            className="border-[#E8736F] text-[#E8736F] hover:bg-[#E8736F] hover:text-white"
+            className="bg-[#E8736F] hover:bg-[#D4605C] text-white"
           >
             <Share2 className="w-4 h-4 mr-2" />
             결과 공유하기
@@ -328,7 +396,8 @@ export default function Result() {
           <Button
             onClick={handlePdfDownload}
             disabled={isPdfLoading}
-            className="bg-[#E8736F] hover:bg-[#D4605C] text-white"
+            variant="outline"
+            className="border-[#E8736F] text-[#E8736F] hover:bg-[#E8736F] hover:text-white"
           >
             {isPdfLoading ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
