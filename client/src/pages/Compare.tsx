@@ -65,8 +65,8 @@ export default function Compare() {
   const [result1, setResult1] = useState<CompareResult | null>(null);
   const [result2, setResult2] = useState<CompareResult | null>(null);
   const [showResults, setShowResults] = useState(false);
-  const [name1, setName1] = useState("사람 A");
-  const [name2, setName2] = useState("사람 B");
+  const name1 = "나";
+  const name2 = "배우자";
 
   // Check URL params for pre-loaded comparison
   useMemo(() => {
@@ -74,6 +74,7 @@ export default function Compare() {
     const s1 = params.get('a');
     const s2 = params.get('b');
     if (s1 && s2) {
+      // Both provided — show results immediately
       const r1 = decodeScores(s1);
       const r2 = decodeScores(s2);
       if (r1 && r2) {
@@ -82,6 +83,13 @@ export default function Compare() {
         setShowResults(true);
         setLink1(s1);
         setLink2(s2);
+      }
+    } else if (s1) {
+      // Only A (my result) provided — pre-fill and wait for B
+      const r1 = decodeScores(s1);
+      if (r1) {
+        setResult1(r1);
+        setLink1(s1);
       }
     }
   }, [searchString]);
@@ -171,37 +179,32 @@ export default function Compare() {
                 <div>
                   <label className="block text-sm font-medium text-[#3D3535] mb-2">
                     <Heart className="w-4 h-4 inline mr-1 text-[#E8736F]" />
-                    첫 번째 사람의 결과 링크
+                    나의 결과
                   </label>
-                  <Input
-                    value={name1}
-                    onChange={(e) => setName1(e.target.value)}
-                    placeholder="이름 (선택)"
-                    className="mb-2 border-[#3D3535]/10"
-                  />
                   <Input
                     value={link1}
                     onChange={(e) => setLink1(e.target.value)}
                     placeholder="결과 공유 링크 또는 점수 (예: 10-8-5-4-3)"
-                    className="border-[#3D3535]/10"
+                    className={`border-[#3D3535]/10 ${result1 ? 'bg-[#E8736F]/5 border-[#E8736F]/30' : ''}`}
+                    readOnly={!!result1}
                   />
+                  {result1 && (
+                    <p className="text-xs text-[#E8736F] mt-1 font-medium">
+                      ✓ 내 진단 결과가 자동으로 입력되었습니다
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-[#3D3535] mb-2">
                     <Heart className="w-4 h-4 inline mr-1 text-[#7B68EE]" />
-                    두 번째 사람의 결과 링크
+                    배우자의 결과
                   </label>
-                  <Input
-                    value={name2}
-                    onChange={(e) => setName2(e.target.value)}
-                    placeholder="이름 (선택)"
-                    className="mb-2 border-[#3D3535]/10"
-                  />
                   <Input
                     value={link2}
                     onChange={(e) => setLink2(e.target.value)}
-                    placeholder="결과 공유 링크 또는 점수 (예: 7-6-8-5-4)"
+                    placeholder="배우자의 공유 링크 또는 점수를 붙여넣으세요"
                     className="border-[#3D3535]/10"
+                    autoFocus={!!result1}
                   />
                 </div>
                 <Button
@@ -215,7 +218,7 @@ export default function Compare() {
 
               <div className="mt-6 p-4 rounded-xl bg-[#FDF8F4] border border-[#3D3535]/5">
                 <p className="text-xs text-[#3D3535]/50 leading-relaxed">
-                  <strong className="text-[#3D3535]/70">사용 방법:</strong> 각자 진단을 완료한 후 "결과 공유하기" 버튼을 눌러 복사된 텍스트에서 링크를 붙여넣으세요.
+                  <strong className="text-[#3D3535]/70">사용 방법:</strong> 내 결과는 자동으로 채워져 있습니다. 배우자가 진단을 완료한 후 "결과 공유하기"로 복사한 링크를 아래에 붙여넣으세요.
                   또는 점수를 직접 입력할 수도 있습니다 (인정하는말-함께하는시간-선물-봉사-스킨십 순서).
                 </p>
               </div>

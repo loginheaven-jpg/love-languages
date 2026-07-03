@@ -399,7 +399,10 @@ export default function Result() {
               <Button
                 size="lg"
                 className="bg-[#E8736F] hover:bg-[#D4605C] text-white px-8 py-6 text-lg rounded-2xl shadow-lg shadow-[#E8736F]/20 transition-all duration-200 active:scale-[0.97]"
-                onClick={() => navigate('/quiz')}
+                onClick={() => {
+                  localStorage.removeItem('loveLanguageQuiz_progress');
+                  navigate('/quiz');
+                }}
               >
                 나도 진단해보기
                 <ArrowRight className="w-5 h-5 ml-2" />
@@ -445,7 +448,7 @@ export default function Result() {
           </Button>
           <Button
             variant="outline"
-            onClick={() => navigate('/compare')}
+            onClick={() => navigate(`/compare?a=${encodeScores(result.scores)}`)}
             className="border-[#7B68EE] text-[#7B68EE] hover:bg-[#7B68EE] hover:text-white"
           >
             <Users className="w-4 h-4 mr-2" />

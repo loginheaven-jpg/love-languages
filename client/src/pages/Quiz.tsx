@@ -35,11 +35,6 @@ function loadProgress(): SavedProgress | null {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const data: SavedProgress = JSON.parse(raw);
-    // Expire after 24 hours
-    if (Date.now() - data.timestamp > 24 * 60 * 60 * 1000) {
-      localStorage.removeItem(STORAGE_KEY);
-      return null;
-    }
     return data;
   } catch {
     return null;
@@ -116,8 +111,7 @@ export default function Quiz() {
     if (validAnswers.length === totalQuestions) {
       const result = calculateResult(validAnswers);
       sessionStorage.setItem('quizResult', JSON.stringify(result));
-      // Clear saved progress on completion
-      clearProgress();
+      // Do NOT clear progress here — keep until user starts a new quiz
       navigate('/result');
     }
   }, [answers, totalQuestions, navigate]);
