@@ -26,9 +26,14 @@ export default function Home() {
               alt="Logo"
               className="w-9 h-9"
             />
-            <span className="font-serif text-lg font-semibold text-[#3D3535]">
-              사랑의 언어
-            </span>
+            <div className="flex flex-col">
+              <span className="font-serif text-base font-semibold text-[#E8736F] leading-tight">
+                예봄 부부의 삶
+              </span>
+              <span className="text-[11px] text-[#3D3535]/60 tracking-wider">
+                사랑의 언어 진단
+              </span>
+            </div>
           </div>
           <Button
             variant="outline"
@@ -209,9 +214,10 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="py-8 px-4 border-t border-[#3D3535]/10 bg-white">
-        <div className="container text-center text-sm text-[#3D3535]/40">
-          <p>Based on "The Five Love Languages" by Dr. Gary Chapman</p>
-          <p className="mt-1">본 진단은 교육 및 자기이해 목적으로 제공됩니다.</p>
+        <div className="container text-center">
+          <p className="text-sm text-[#3D3535]/60 font-medium mb-1">예봄 부부의 삶</p>
+          <p className="text-xs text-[#3D3535]/40">Based on "The Five Love Languages" by Dr. Gary Chapman</p>
+          <p className="text-xs text-[#3D3535]/40 mt-0.5">본 진단은 교육 및 자기이해 목적으로 제공됩니다.</p>
         </div>
       </footer>
     </div>

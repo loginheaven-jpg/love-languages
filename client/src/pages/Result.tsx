@@ -1,20 +1,24 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { QuizResult, LANGUAGE_INFO, LoveLanguage } from "@/lib/quizData";
+import { generateResultPdf } from "@/lib/generatePdf";
 import { motion } from "framer-motion";
-import { Heart, ArrowLeft, RotateCcw, Share2, Download } from "lucide-react";
+import { Heart, ArrowLeft, RotateCcw, Share2, Download, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 import RadarChart from "@/components/RadarChart";
+import { toast } from "sonner";
 
 /*
  * Design: Warm Embrace - Personalized Result Page
  * Asymmetric layout, radar chart visualization
  * Detailed breakdown with tips
+ * PDF download & share functionality
  */
 
 export default function Result() {
   const [, navigate] = useLocation();
   const [result, setResult] = useState<QuizResult | null>(null);
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
 
   useEffect(() => {
     const stored = sessionStorage.getItem('quizResult');
@@ -34,11 +38,12 @@ export default function Result() {
 
   const handleRetake = () => {
     sessionStorage.removeItem('quizResult');
+    localStorage.removeItem('loveLanguageQuiz_progress');
     navigate('/quiz');
   };
 
   const handleShare = async () => {
-    const text = `나의 사랑의 언어는 "${primaryLang.name}" 입니다! ${primaryLang.icon}\n5가지 사랑의 언어 진단을 해보세요.`;
+    const text = `[예봄 부부의 삶] 나의 사랑의 언어는 "${primaryLang.name}" 입니다! ${primaryLang.icon}\n\n5가지 사랑의 언어 진단을 해보세요.`;
     if (navigator.share) {
       try {
         await navigator.share({ title: '5가지 사랑의 언어 진단 결과', text });
@@ -47,7 +52,19 @@ export default function Result() {
       }
     } else {
       await navigator.clipboard.writeText(text);
-      alert('결과가 클립보드에 복사되었습니다!');
+      toast.success("결과가 클립보드에 복사되었습니다!");
+    }
+  };
+
+  const handlePdfDownload = async () => {
+    setIsPdfLoading(true);
+    try {
+      await generateResultPdf(result);
+      toast.success("PDF가 다운로드되었습니다!");
+    } catch (e) {
+      toast.error("PDF 생성에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsPdfLoading(false);
     }
   };
 
@@ -72,6 +89,16 @@ export default function Result() {
       </header>
 
       <main className="container max-w-4xl mx-auto py-10 px-4">
+        {/* Brand Logo */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-4"
+        >
+          <span className="text-sm text-[#3D3535]/40 font-medium tracking-wide">예봄 부부의 삶</span>
+        </motion.div>
+
         {/* Primary Result */}
         <motion.section
           initial={{ opacity: 0, y: 30 }}
@@ -280,31 +307,45 @@ export default function Result() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.7 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-4 pb-10"
+          className="flex flex-col sm:flex-row items-center justify-center gap-3 pb-10"
         >
           <Button
             variant="outline"
             onClick={handleRetake}
-            className="border-[#E8736F] text-[#E8736F] hover:bg-[#E8736F] hover:text-white"
+            className="border-[#3D3535]/20 text-[#3D3535]/70 hover:bg-[#3D3535]/5"
           >
             <RotateCcw className="w-4 h-4 mr-2" />
             다시 진단하기
           </Button>
           <Button
             onClick={handleShare}
-            className="bg-[#E8736F] hover:bg-[#D4605C] text-white"
+            variant="outline"
+            className="border-[#E8736F] text-[#E8736F] hover:bg-[#E8736F] hover:text-white"
           >
             <Share2 className="w-4 h-4 mr-2" />
             결과 공유하기
+          </Button>
+          <Button
+            onClick={handlePdfDownload}
+            disabled={isPdfLoading}
+            className="bg-[#E8736F] hover:bg-[#D4605C] text-white"
+          >
+            {isPdfLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Download className="w-4 h-4 mr-2" />
+            )}
+            PDF 저장
           </Button>
         </motion.section>
       </main>
 
       {/* Footer */}
       <footer className="py-8 px-4 border-t border-[#3D3535]/10 bg-white">
-        <div className="container text-center text-sm text-[#3D3535]/40">
-          <p>Based on "The Five Love Languages" by Dr. Gary Chapman</p>
-          <p className="mt-1">본 진단은 교육 및 자기이해 목적으로 제공됩니다.</p>
+        <div className="container text-center">
+          <p className="text-sm text-[#3D3535]/60 font-medium mb-1">예봄 부부의 삶</p>
+          <p className="text-xs text-[#3D3535]/40">Based on "The Five Love Languages" by Dr. Gary Chapman</p>
+          <p className="text-xs text-[#3D3535]/40 mt-0.5">본 진단은 교육 및 자기이해 목적으로 제공됩니다.</p>
         </div>
       </footer>
     </div>
