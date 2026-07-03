@@ -100,14 +100,14 @@ export default function Home() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 1.2, duration: 0.8 }}
-            className="mt-12 flex flex-col items-center gap-1 md:hidden"
+            className="mt-6 flex flex-col items-center gap-1 md:hidden"
           >
-            <span className="text-xs text-[#3D3535]/50 tracking-wide">자세한 설명</span>
+            <span className="text-sm text-[#3D3535]/60 tracking-wide font-medium">자세한 설명</span>
             <motion.div
-              animate={{ y: [0, 6, 0] }}
+              animate={{ y: [0, 8, 0] }}
               transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
             >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-[#E8736F]/60">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-[#E8736F]/70">
                 <path d="M7 10l5 5 5-5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </motion.div>
