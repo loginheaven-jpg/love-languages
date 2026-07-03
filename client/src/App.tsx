@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Quiz from "./pages/Quiz";
 import Result from "./pages/Result";
+import Compare from "./pages/Compare";
 
 function Router() {
   return (
@@ -14,6 +15,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/quiz" component={Quiz} />
       <Route path="/result" component={Result} />
+      <Route path="/compare" component={Compare} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

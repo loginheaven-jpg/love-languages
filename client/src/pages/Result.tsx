@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { QuizResult, LANGUAGE_INFO, LoveLanguage, calculateResult } from "@/lib/quizData";
 import { generateResultPdf } from "@/lib/generatePdf";
 import { motion } from "framer-motion";
-import { Heart, ArrowLeft, RotateCcw, Share2, Download, Loader2, Link2 } from "lucide-react";
+import { Heart, ArrowLeft, RotateCcw, Share2, Download, Loader2, Link2, Users, ArrowRight } from "lucide-react";
 import { useLocation, useSearch } from "wouter";
 import RadarChart from "@/components/RadarChart";
 import { toast } from "sonner";
@@ -371,6 +371,33 @@ export default function Result() {
           </div>
         </motion.section>
 
+        {/* Shared link CTA - 나도 진단해보기 */}
+        {isShared && (
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.65 }}
+            className="mb-12"
+          >
+            <div className="bg-gradient-to-r from-[#E8736F]/10 to-[#F5A623]/10 rounded-3xl p-8 border border-[#E8736F]/20 text-center">
+              <h3 className="font-serif font-bold text-[#3D3535] text-xl mb-2">
+                나의 사랑의 언어도 궁금하신가요?
+              </h3>
+              <p className="text-sm text-[#3D3535]/60 mb-6">
+                30개의 질문으로 나만의 사랑 표현법을 발견해보세요. 약 5분이면 충분합니다.
+              </p>
+              <Button
+                size="lg"
+                className="bg-[#E8736F] hover:bg-[#D4605C] text-white px-8 py-6 text-lg rounded-2xl shadow-lg shadow-[#E8736F]/20 transition-all duration-200 active:scale-[0.97]"
+                onClick={() => navigate('/quiz')}
+              >
+                나도 진단해보기
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
+          </motion.section>
+        )}
+
         {/* Actions */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
@@ -405,6 +432,14 @@ export default function Result() {
               <Download className="w-4 h-4 mr-2" />
             )}
             PDF 저장
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/compare')}
+            className="border-[#7B68EE] text-[#7B68EE] hover:bg-[#7B68EE] hover:text-white"
+          >
+            <Users className="w-4 h-4 mr-2" />
+            결과 비교하기
           </Button>
         </motion.section>
       </main>
