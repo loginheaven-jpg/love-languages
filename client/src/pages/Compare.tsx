@@ -3,9 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LANGUAGE_INFO, LoveLanguage } from "@/lib/quizData";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Users, Heart, Link2, ArrowRight } from "lucide-react";
+import { ArrowLeft, Users, Heart, Link2, ArrowRight, FileDown, Loader2 } from "lucide-react";
 import { useLocation, useSearch } from "wouter";
 import { toast } from "sonner";
+import { generateComparePdf } from "@/lib/generatePdf";
 
 /*
  * Design: Warm Embrace - Compare Page
@@ -67,6 +68,29 @@ export default function Compare() {
   const [showResults, setShowResults] = useState(false);
   const name1 = "나";
   const name2 = "배우자";
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
+
+  const handlePdfDownload = async () => {
+    if (!result1 || !result2) return;
+    setIsPdfLoading(true);
+    try {
+      const { isMobile } = await generateComparePdf(result1, result2);
+      if (isMobile) {
+        toast.success("PDF가 새 탭에서 열렸습니다", {
+          description: "페이지 상단의 '📥 PDF 저장하기' 버튼을 눌러 저장하세요.",
+          duration: 6000,
+        });
+      } else {
+        toast.success("커플 비교 PDF가 다운로드되었습니다", {
+          description: "다운로드 폴더에서 확인하세요.",
+        });
+      }
+    } catch (err) {
+      toast.error("PDF 생성에 실패했습니다");
+    } finally {
+      setIsPdfLoading(false);
+    }
+  };
 
   // Check URL params for pre-loaded comparison
   useMemo(() => {
@@ -350,8 +374,8 @@ export default function Compare() {
                 </div>
               </section>
 
-              {/* Reset */}
-              <div className="flex justify-center gap-3 pb-10">
+              {/* Actions */}
+              <div className="flex flex-wrap justify-center gap-3 pb-10">
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -364,6 +388,18 @@ export default function Compare() {
                   className="border-[#3D3535]/20 text-[#3D3535]/70"
                 >
                   다른 결과 비교하기
+                </Button>
+                <Button
+                  onClick={handlePdfDownload}
+                  disabled={isPdfLoading}
+                  className="bg-[#7B68EE] hover:bg-[#6A5ACD] text-white"
+                >
+                  {isPdfLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <FileDown className="w-4 h-4 mr-2" />
+                  )}
+                  PDF 저장
                 </Button>
                 <Button
                   onClick={() => navigate('/quiz')}
