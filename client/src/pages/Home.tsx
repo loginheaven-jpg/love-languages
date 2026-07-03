@@ -197,8 +197,11 @@ export default function Home() {
             <h2 className="text-2xl md:text-3xl font-serif font-bold text-[#3D3535] mb-4">
               지금 바로 시작해보세요
             </h2>
-            <p className="text-[#3D3535]/60 mb-8">
+            <p className="text-[#3D3535]/60 mb-3">
               나의 사랑의 언어를 알면, 상대방의 사랑도 더 잘 이해할 수 있습니다.
+            </p>
+            <p className="text-[#C0392B] text-sm font-bold mb-8">
+              진단결과는 저장되지 않습니다. 진단종료후 결과지를 저장하시거나 캡춰하셔서 보관해 주십시요.
             </p>
             <Button
               size="lg"
